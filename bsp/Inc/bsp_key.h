@@ -26,6 +26,10 @@ typedef struct{
     bool is_busy;
 }bsp_key_param_t;
 
+typedef enum{
+    Board_Key = 0,
+}key_index_t;
+
 typedef void(*TaskFunc)(void);
 
 extern bsp_key_param_t bsp_key_param[];
