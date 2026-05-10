@@ -12,12 +12,14 @@
  * @param task_id 任务的ID。
  * @param dt 任务的周期，单位为毫秒。
  * 
+ * @note 不要加printf、scanf、delay等耗时操作，否则会影响任务调度。
+ * 
  */
 #define WR_TASK_PERIODIC(task_id ,dt) \
         static uint32_t task_next_time_##task_id = 0;  \
         uint32_t task_now_time_##task_id = WR_GetTick();  \
         if ((int32_t)(task_now_time_##task_id - task_next_time_##task_id) < 0) return;  \
-        task_next_time_##task_id = task_now_time_##task_id + (uint32_t)(dt); // 毫秒级定时器  
+        task_next_time_##task_id = WR_GetTick() +(uint32_t)(dt); // 毫秒级定时器  
 
 
 
