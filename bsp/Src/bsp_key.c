@@ -3,7 +3,13 @@
 /****************** 按键配置表 ***********************/
 
 bsp_key_param_t bsp_key_param[] = {
-    {Debug_key_PORT, Debug_key_Board_Key_PIN, .starttick = 0, .endtick = 0, false}
+
+    {Debug_key_Key_center_PORT, Debug_key_Key_center_PIN, .starttick = 0, .endtick = 0, false},
+    {Debug_key_Key_right_PORT, Debug_key_Key_right_PIN, .starttick = 0, .endtick = 0, false},
+    {Debug_key_Key_left_PORT, Debug_key_Key_left_PIN, .starttick = 0, .endtick = 0, false},
+    {Debug_key_Key_up_PORT, Debug_key_Key_up_PIN, .starttick = 0, .endtick = 0, false},
+    {Debug_key_Key_down_PORT, Debug_key_Key_down_PIN, .starttick = 0, .endtick = 0, false},
+
 };
 
 /****************** 按键索引 ***********************/
@@ -20,6 +26,21 @@ bsp_key_param_t bsp_key_param[] = {
 
  /****************** 函数逻辑部分 ***********************/
 
+ /**
+  * @brief 按键任务初始化
+  * 
+  * @note 主要是初始化定时器
+  * 
+  */
+void BspKey_Init()
+{
+    // 清除定时器中断标志位
+    NVIC_ClearPendingIRQ(Key_task_INST_INT_IRQN);
+
+    // 使能定时器中断
+    NVIC_EnableIRQ(Key_task_INST_INT_IRQN);
+}
+
 /**
  * @brief 非阻塞式按键检测状态
  * 
@@ -30,7 +51,6 @@ bsp_key_param_t bsp_key_param[] = {
 
 void BSP_KeyTask(void)
 {
-    WR_TASK_PERIODIC(bsp_keytask, 20);
 
     for(int i = 0; i < BSP_KEY_NUMBER; i++)
     {
@@ -64,8 +84,8 @@ void BSP_KeyTask(void)
         {
             // 按键空闲状态
             if(bsp_key_param[i].endtick == bsp_key_param[i].starttick);
-            // 短按按键判断时间小于300ms
-            else if(bsp_key_param[i].endtick - bsp_key_param[i].starttick < 300)
+            // 短按按键判断时间小于200ms
+            else if(bsp_key_param[i].endtick - bsp_key_param[i].starttick < 200)
             {
                 bsp_key_param[i].key_shortpressflag = true;
                 bsp_key_param[i].endtick = bsp_key_param[i].starttick;
@@ -76,12 +96,14 @@ void BSP_KeyTask(void)
         }
         bsp_key_param[i].last_state = current_state;
     }
+    
 }
 
 /**
  * @brief 执行简单的按键触发逻辑
  * 
- * @param 
+ * @param task 执行的任务逻辑
+ * @param key_flag 指定按键检测方式
  * 
  */
 void WR_KeyControlTask(TaskFunc task, bool* key_flag)
@@ -97,5 +119,25 @@ void WR_KeyControlTask(TaskFunc task, bool* key_flag)
     {
         task();
         *key_flag = false;
+    }
+}
+
+/**
+ * @brief 定时器中断每20ms检测按键状态
+ * 
+ * @note 优先级 --> Level3 - Lowest
+ * 
+ */
+void Key_task_INST_IRQHandler(void)
+{
+    switch (DL_Timer_getPendingInterrupt(Key_task_INST))
+    {
+    case DL_TIMER_IIDX_ZERO:
+        BSP_KeyTask();
+        DL_Timer_clearInterruptStatus(Key_task_INST, DL_TIMER_IIDX_ZERO);
+        break;
+    
+    default:
+        break;
     }
 }

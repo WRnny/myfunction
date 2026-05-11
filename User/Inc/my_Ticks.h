@@ -19,7 +19,7 @@
         static uint32_t task_next_time_##task_id = 0;  \
         uint32_t task_now_time_##task_id = WR_GetTick();  \
         if ((int32_t)(task_now_time_##task_id - task_next_time_##task_id) < 0) return;  \
-        task_next_time_##task_id = WR_GetTick() +(uint32_t)(dt); // 毫秒级定时器  
+        task_next_time_##task_id = WR_GetTick() + (uint32_t)(dt); // 毫秒级定时器  
 
 
 

@@ -103,7 +103,7 @@ void BspMotor_SetSpeed(motor_index_t motor_id, int16_t dutyCycle)
         DL_GPIO_clearPins(motor_param[motor_id].dir.gpio_in2, motor_param[motor_id].dir.pins_in2);
 
         DL_Timer_setCaptureCompareValue(motor_param[motor_id].timer, (uint32_t)(dutyCycle), motor_param[motor_id].ccIndex);
-    }else if(dutyCycle > 10000){
+    }else if(dutyCycle >= 10000){
         DL_GPIO_setPins(motor_param[motor_id].dir.gpio_in1, motor_param[motor_id].dir.pins_in1);
         DL_GPIO_clearPins(motor_param[motor_id].dir.gpio_in2, motor_param[motor_id].dir.pins_in2);
 
@@ -114,7 +114,7 @@ void BspMotor_SetSpeed(motor_index_t motor_id, int16_t dutyCycle)
         DL_GPIO_clearPins(motor_param[motor_id].dir.gpio_in1, motor_param[motor_id].dir.pins_in1);
 
         DL_Timer_setCaptureCompareValue(motor_param[motor_id].timer, -(uint32_t)(dutyCycle), motor_param[motor_id].ccIndex);
-    }else if(dutyCycle < -10000){
+    }else if(dutyCycle <= -10000){
         DL_GPIO_setPins(motor_param[motor_id].dir.gpio_in2, motor_param[motor_id].dir.pins_in2);
         DL_GPIO_clearPins(motor_param[motor_id].dir.gpio_in1, motor_param[motor_id].dir.pins_in1);
 
