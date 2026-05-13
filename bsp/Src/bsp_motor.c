@@ -128,3 +128,24 @@ void BspMotor_SetSpeed(motor_index_t motor_id, int16_t dutyCycle)
 
 }
 
+/**
+ * @brief 角度环控制电机速度
+ * 
+ * @param motor_id 电机的名称
+ * 
+ * @param Speed 电机速度
+ * 
+ * @note 只针对当前写了，建议速度不要超过八十即可
+ */
+void SpeedLoop_set(motor_index_t motor_id, int Speed)
+{
+    // 右轮
+    if(motor_id == BSP_MOTOR_A)
+    {
+        SpeedloopR_PIDParam.target = Speed;
+    }
+    // 左轮
+    else if(motor_id == BSP_MOTOR_B){
+        SpeedloopL_PIDParam.target = Speed;
+    }
+}

@@ -30,6 +30,9 @@ extern "C"
 
 uint8_t rx_data;
 
+// 函数声明
+static void BspUART_ParsePIDCommand(char* cmd);
+
 /**
  * @brief 串口初始化
  *
@@ -49,9 +52,21 @@ void BspUART_Init(void)
     NVIC_EnableIRQ(Rx_yaw_INST_INT_IRQN);
 }
 
+// 自定义快速浮点数解析函数
+static bool fast_parse_float(const char *str, float *result)
+{
+    if (!str || !result)
+        return false;
+
+    char *end;
+    *result = strtof(str, &end);
+
+    // 检查是否成功解析了整个字符串
+    return (end != str && *end == '\0');
+}
+
 void Debug_UART_INST_IRQHandler(void)
 {
-
     switch (DL_UART_getPendingInterrupt(Debug_UART_INST))
     {
     case DL_UART_IIDX_RX:
@@ -64,7 +79,7 @@ void Debug_UART_INST_IRQHandler(void)
 
 static char uart0_rx_buf[256];      // 接收缓存区
 static uint8_t uart0_rx_index = 0;  // 接收索引
-volatile float Yaw_received = 0.0f; // Yaw轴接收数据
+ float Yaw_received = 0.0f; // Yaw轴接收数据
 volatile uint8_t Yaw_RxFlag = 0;    // Yaw轴接收数据索引
 float Yaw_sum = 0;                  // 初始化Yaw轴数据积累
 float Basic_set_yaw = 0;            // 上电测的基准轴
@@ -73,50 +88,42 @@ float Basic_set_yaw = 0;            // 上电测的基准轴
  * @brief 简化的Yaw轴数据接收处理
  * 使用更可靠的逐字节解析，避免浮点数解析阻塞
  */
-void UART1_IRQHandler(void)
-{
-    // 确保中断源正确
-    uint32_t int_status = DL_UART_getPendingInterrupt(UART1);
+  void UART1_IRQHandler(void)
+  {
+      if (DL_UART_getPendingInterrupt(UART1) == DL_UART_IIDX_RX)
+      {
+          uint8_t RxData = DL_UART_Main_receiveData(UART1);
 
-    if (int_status == DL_UART_IIDX_RX)
-    {
-        uint8_t RxData = DL_UART_Main_receiveData(UART1);
+          // 使用局部变量优化
+          uint8_t idx = uart0_rx_index;
 
-        // 立即清除中断标志，防止重复中断
-        DL_UART_clearInterruptStatus(UART1, DL_UART_IIDX_RX);
+          if (RxData == '\r' || RxData == '\n')
+          {
+              if (idx > 0)
+              {
+                  uart0_rx_buf[idx] = '\0';
 
-        // 调试：LED指示接收到数据
-        // DL_GPIO_togglePins(DEBUG_LED_PORT, DEBUG_LED_PIN);
+                  // 使用更高效的解析
+                  if (fast_parse_float(uart0_rx_buf, &Yaw_received))
+                  {
+                      Yaw_RxFlag = 1;
+                  }
 
-        // 简化的接收逻辑
-        if (RxData == '\r' || RxData == '\n')
-        {
-            if (uart0_rx_index > 0)
-            {
-                uart0_rx_buf[uart0_rx_index] = '\0';
-                Yaw_received = (float)atof(uart0_rx_buf);
-                Yaw_RxFlag = 1;
+                  idx = 0;
+              }
+          }
+          else if (idx < UART_RX_BUF_SIZE - 1)
+          {
+              uart0_rx_buf[idx++] = (char)RxData;
+          }
+          else
+          {
+              idx = 0; // 溢出重置
+          }
 
-                uart0_rx_index = 0;
-            }
-        }
-        else if (uart0_rx_index < 127) // 保留一个字节给字符串结束符
-        {
-            uart0_rx_buf[uart0_rx_index++] = (char)RxData;
-        }
-        // 如果缓冲区满了，丢弃数据并重置
-        else
-        {
-            uart0_rx_index = 0;
-        }
-    }
-    else
-    {
-        // 清除其他可能的中断标志
-        DL_UART_clearInterruptStatus(UART1, int_status);
-    }
-}
-
+          uart0_rx_index = idx;
+      }
+  }
 /**
  * @brief 串口发送一字节数据
  */

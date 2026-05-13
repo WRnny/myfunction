@@ -77,5 +77,3 @@ void BspBuzzer_toggle(void)
         BspBuzzer_ON();
     }
 }
-
-

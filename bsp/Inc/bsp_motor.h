@@ -2,6 +2,7 @@
 #define __BSP_MOTOR_H__
 
 #include "ti_msp_dl_config.h"
+#include "pid.h"
 
 #define BSP_MOTOR_NUM           sizeof(motor_param) / sizeof(bsp_motor_param_t) // 配置电机数量
 
@@ -39,6 +40,17 @@ void BspMotor_Init(void);
  * @note 暂时没有写PID逻辑，后面打算写个PID的逻辑去控制电机的转速
  */
 void BspMotor_SetSpeed(motor_index_t motor_id, int16_t dutyCycle);
+
+/**
+ * @brief 角度环控制电机速度
+ * 
+ * @param motor_id 电机的名称
+ * 
+ * @param Speed 电机速度
+ * 
+ * @note 只针对当前写了，建议速度不要超过八十即可
+ */
+void SpeedLoop_set(motor_index_t motor_id, int Speed);
 
 
 #endif /* __BSP_MOTOR_H__ */

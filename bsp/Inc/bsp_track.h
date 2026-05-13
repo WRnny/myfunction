@@ -21,15 +21,25 @@ typedef enum {
     track_7 = 6
 }track_index_t;
 
+typedef enum{
+    TRACK_FLAG_IDLE,                // 没有特殊情况
+    TRACK_FLAG_ALLWHITE,            // 红外传感器未检测到黑线
+    TRACK_FLAG_ALLBLACK,            // 红外传感器全检测到黑线
+    TRACK_FLAG_RIGHT_ONLEFT         // 红外传感器检测到左侧直角
+}Track_Flag;
+
 extern volatile float qty;                // 检测到黑线的传感器数量
 extern volatile float coord;              // 当前时刻检测到的黑线位置
 extern volatile float last_coord;         // 上一时刻检测到的黑线位置
+extern Track_Flag Track_State;            // 循迹模块特殊情况位
+extern Track_Flag Track_LastState;        // 记录上一时刻红外传感器的一些特殊状态
+
 
 /**
  * @brief 循迹部分初始化
  * 
  */
-void BspTarck_Init(void);
+// void BspTarck_Init(void);
 
 /**
  * @brief 循迹模块信息数据化过程
